@@ -1,65 +1,37 @@
-#TODO: get coords from screen
-
-#TODO: get screenshot to analyze
-
-import numpy as np
-import win32clipboard, win32gui
-import win32api, win32con
 from Grabscreen import grab_screen
 import cv2
 import time
 import pytesseract
-from PIL import Image, ImageFilter, ImageEnhance
 from directkeys import PressKey,ReleaseKey, W, A, S, D,F3, C, MouseMoveTo, LSHIFT, Q, E
 import pygetwindow as gw
 import pyautogui
 import pydirectinput
-import re
 
-WIDTH = 160
-HEIGHT = 120
-LR = 1e-3
-EPOCHS = 10
-MODEL_NAME = 'pygta5-car-fast-{}-{}-{}-epochs-300K-data.model'.format(LR, 'alexnetv2', EPOCHS)
 
 t_time = 0.09
 
 
-
 def straight():
-##    if random.randrange(4) == 2:
-##        ReleaseKey(W)
-##    else:
     PressKey(W)
     time.sleep(1)
     ReleaseKey(A)
     ReleaseKey(D)
 
+
 def left():
     PressKey(W)
     PressKey(A)
-    #ReleaseKey(W)
     ReleaseKey(D)
-    #ReleaseKey(A)
     time.sleep(t_time)
     ReleaseKey(A)
+
 
 def right():
     PressKey(W)
     PressKey(D)
     ReleaseKey(A)
-    #ReleaseKey(W)
-    #ReleaseKey(D)
     time.sleep(t_time)
     ReleaseKey(D)
-
-
-def check_danger():
-    pass
-
-
-def check_ores():
-    pass
 
 
 def move_forward():
@@ -69,12 +41,6 @@ def move_forward():
     ReleaseKey(W)
     ReleaseKey(LSHIFT)
 
-def strip_mine():
-    reset_position()
-    mineblocks()
-    check_danger()
-    check_ores()
-    move_forward()
 
 def move_left(length):
     PressKey(LSHIFT)
@@ -83,22 +49,13 @@ def move_left(length):
     ReleaseKey(A)
     ReleaseKey(LSHIFT)
 
+
 def move_right(length):
     PressKey(LSHIFT)
     PressKey(D)
     time.sleep(length)
     ReleaseKey(D)
     ReleaseKey(LSHIFT)
-
-def mineblocks():
-    pyautogui.mouseDown()
-    time.sleep(1)
-    pyautogui.mouseUp()
-    pyautogui.moveRel(0, 60)
-    pyautogui.mouseDown()
-    time.sleep(1)
-    pyautogui.mouseUp()
-
 
 
 def get_ingredient_coords(ingredient):
@@ -107,7 +64,6 @@ def get_ingredient_coords(ingredient):
     elif ingredient == 'ingredient1':
         coords = pyautogui.locateOnScreen('./images/sugar_ingredient.png', region=(0, 0, 800, 640))
     elif ingredient == 'ingredient2':
-        #coords = pyautogui.locateOnScreen('./images/redstone_ingredient.png', region=(0, 0, 800, 640))
         coords = pyautogui.locateOnScreen('./images/glowstone_ingredient.png', region=(0, 0, 800, 640))
     elif ingredient == 'ingredient3':
         coords = pyautogui.locateOnScreen('./images/gunpowder_ingredient.png', region=(0, 0, 800, 640))
@@ -121,6 +77,7 @@ def get_ingredient_coords(ingredient):
         return coords
     return -1
 
+
 def get_ingredients():
     try:
         nw_coords  = get_ingredient_coords('nether_wart')
@@ -132,6 +89,7 @@ def get_ingredients():
         print('Missing ingredients!')
         return -1, -1, -1, -1
 
+
 def prepare_window():
     minecraft_window = gw.getWindowsWithTitle('Minecraft* 1.15.2 - Multiplayer (3rd-party)')[0]
     #minecraft_window = gw.getWindowsWithTitle('Minecraft 1.16.1 - Singleplayer')[0]
@@ -142,10 +100,10 @@ def prepare_window():
 def reset_mouse():
     pyautogui.moveTo(700,540)
 
+
 def add_ingredient(coords):
     # add ingredient
     PressKey(LSHIFT)
-    #print('Right click on coords: ', coords)
     pyautogui.moveTo(coords)
     pyautogui.moveRel(coords[2]/2, coords[3]/2)
     pyautogui.rightClick()
@@ -185,6 +143,7 @@ def exit_bs():
     time.sleep(0.1)
     ReleaseKey(E)
 
+
 def serve_brewing_stand(i_coords, first):
     if i_coords == -1:
         print("No ingredients!")
@@ -198,8 +157,6 @@ def serve_brewing_stand(i_coords, first):
         if ready_to_brew:
             print("Bottles are present!")
             add_ingredient(i_coords)
-
-
 
 
 def serve_brewing_stand_old():
@@ -248,11 +205,6 @@ def serve_brewing_stand_old():
             reset_mouse()
             time.sleep(0.5)
             print("Bottles not present!")
-    #check water bottles
-    #loop
-        #insert ingredient
-        #check brewed
-    #press button to reset
 
 def get_ingredient(i_type):
     if i_type == 0:
@@ -264,7 +216,7 @@ def get_ingredient(i_type):
     elif i_type == 3:
         ingredient = 'ingredient3'
     else:
-        ingredinet = 'unknown'
+        ingredient = 'unknown'
     try:
         return get_ingredient_coords(ingredient)
     except:
@@ -287,6 +239,7 @@ def open_stand():
         print("Brewing stand not found!")
         return False
 
+#brewing ready
 def ready():
     if pyautogui.locateOnScreen('./images/empty_brewing_slot.png', region=(0, 40, 800, 640)):
         return True
@@ -326,13 +279,6 @@ def alternate_bs(nw_with_drop):
                     first = False
                 reset_mouse()
                 print(coord)
-                #if not is_ingredient_coords_ok(coord):
-                    #try new ingredient
-                #    coord = get_ingredient(j)
-                #    print("ingredients not ok")
-                #if coord == -1:
-                #    print('No ingredient!')
-                #    return
                 serve_brewing_stand(coord, first)
                 exit_bs()
                 time.sleep(0.1)
@@ -381,49 +327,6 @@ def alternate_bs(nw_with_drop):
             i += 1
     return nw_with_drop
 
-
-
-def main():
-    #pyautogui.mouseInfo()
-    prepare_window()
-    last_time = time.time()
-    pytesseract.pytesseract.tesseract_cmd = 'C:/Program Files/Tesseract-OCR/tesseract'
-    for i in list(range(4))[::-1]:
-        print(i + 1)
-        time.sleep(1)
-    print(pyautogui.position())
-    paused = False
-    #while (True):
-    for i in range(1):
-        if not paused:
-            # 800x600 windowed mode
-            screen = grab_screen(region=(0, 40, 800, 640))
-            print('loop took {} seconds'.format(time.time() - last_time))
-            last_time = time.time()
-            #screen = cv2.cvtColor(screen, cv2.COLOR_BGR2GRAY)c
-            #cv2.imshow('window', screen)
-            #text = pytesseract.image_to_string(img)
-            nw_with_drop = False
-            for j in range(8):
-                nw_with_drop = alternate_bs(nw_with_drop)
-
-            if cv2.waitKey(25) & 0xFF == ord('q'):
-                ccv2.destroyAllWindows()
-                break
-
-        turn_thresh = .75
-        fwd_thresh = 0.70
-
-    return 0
-
-
-def crit_hit():
-    time.sleep(4)
-    while True:
-        #print("Hit")
-        pydirectinput.leftClick()
-        time.sleep(1)
-
 def fill_water():
     time.sleep(4)
     for i in range(9):
@@ -436,12 +339,40 @@ def fill_water():
                 if water_bottle:
                     print('filled')
                     break
-
         pydirectinput.mouseUp(button='right')
+
+def main():
+    #pyautogui.mouseInfo()
+    prepare_window()
+    last_time = time.time()
+    pytesseract.pytesseract.tesseract_cmd = 'C:/Program Files/Tesseract-OCR/tesseract'
+    for i in list(range(4))[::-1]:
+        print(i + 1)
+        time.sleep(1)
+    print(pyautogui.position())
+    paused = False
+    for i in range(1):
+        if not paused:
+            # 800x600 windowed mode
+            screen = grab_screen(region=(0, 40, 800, 640))
+            print('loop took {} seconds'.format(time.time() - last_time))
+            last_time = time.time()
+            #screen = cv2.cvtColor(screen, cv2.COLOR_BGR2GRAY)c
+            #cv2.imshow('window', screen)
+            #text = pytesseract.image_to_string(img)
+            nw_with_drop = True
+            for j in range(8):
+                nw_with_drop = alternate_bs(nw_with_drop)
+
+            if cv2.waitKey(25) & 0xFF == ord('q'):
+                ccv2.destroyAllWindows()
+                break
+    return 0
+
+
+
 
 
 main()
-#crit_hit()
 
-#fill_water()
 
